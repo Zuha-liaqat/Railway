@@ -3,9 +3,9 @@ import { AlertCircle, CheckCircle2, Info, X } from 'lucide-react'
 import { subscribeToasts, toast } from '../../lib/toast'
 
 const VARIANTS = {
-  error: { icon: AlertCircle, className: 'bg-red-600' },
-  success: { icon: CheckCircle2, className: 'bg-emerald-600' },
-  info: { icon: Info, className: 'bg-gray-800' },
+  error: { icon: AlertCircle, iconBg: 'bg-red-50', iconColor: 'text-red-600' },
+  success: { icon: CheckCircle2, iconBg: 'bg-emerald-50', iconColor: 'text-emerald-600' },
+  info: { icon: Info, iconBg: 'bg-gray-100', iconColor: 'text-gray-600' },
 }
 
 export default function Toaster() {
@@ -16,20 +16,24 @@ export default function Toaster() {
   if (toasts.length === 0) return null
 
   return (
-    <div className="fixed top-4 right-4 z-[9999] flex w-full max-w-sm flex-col gap-2 pointer-events-none">
+    <div className="fixed top-4 left-4 right-4 z-9999 flex flex-col items-end gap-2 pointer-events-none sm:left-auto">
       {toasts.map((t) => {
-        const { icon: Icon, className } = VARIANTS[t.type] || VARIANTS.info
+        const { icon: Icon, iconBg, iconColor } = VARIANTS[t.type] || VARIANTS.info
         return (
           <div
             key={t.id}
             role="alert"
-            className={`toast-enter pointer-events-auto flex items-start gap-2.5 rounded-lg ${className} px-4 py-3 text-sm text-white shadow-lg`}
+            className="toast-enter pointer-events-auto flex w-full items-start gap-3 rounded-2xl border border-gray-200 bg-white p-4 text-sm shadow-lg sm:w-96"
           >
-            <Icon size={16} className="mt-0.5 shrink-0" />
-            <p className="flex-1 break-words">{t.message}</p>
+            <span
+              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${iconBg} ${iconColor}`}
+            >
+              <Icon size={16} />
+            </span>
+            <p className="flex-1 pt-1 text-gray-900 wrap-break-word">{t.message}</p>
             <button
               onClick={() => toast.dismiss(t.id)}
-              className="shrink-0 text-white/80 hover:text-white"
+              className="mt-1.5 shrink-0 text-gray-400 hover:text-gray-600"
               aria-label="Dismiss"
             >
               <X size={14} />

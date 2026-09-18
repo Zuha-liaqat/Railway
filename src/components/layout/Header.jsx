@@ -1,20 +1,24 @@
-import { Link } from 'react-router-dom'
-import { Bell, Search, Settings } from 'lucide-react'
+import { Link, useLocation } from 'react-router-dom'
+import { Bell, Settings } from 'lucide-react'
 
-export default function Header({ search, onSearchChange, searchPlaceholder }) {
+const PAGE_TITLES = {
+  '/dashboard': 'Dashboard',
+  '/tasks': 'Tasks',
+  '/tasks/new': 'New Task',
+  '/settings': 'Settings',
+}
+
+export default function Header() {
+  const location = useLocation()
   const email = localStorage.getItem('clutch_user_email') || ''
   const initial = email ? email[0].toUpperCase() : '?'
+  const title = PAGE_TITLES[location.pathname] || 'Techfy'
 
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b border-gray-200 bg-white px-4 md:px-8">
-      <div className="relative flex-1 max-w-2xl">
-        <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-        <input
-          value={search ?? ''}
-          onChange={(e) => onSearchChange?.(e.target.value)}
-          placeholder={searchPlaceholder || 'Search...'}
-          className="w-full rounded-xl border border-gray-200 bg-gray-50 pl-10 pr-3 py-2.5 text-sm text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-300"
-        />
+      <div className="flex-1 min-w-0">
+        <h1 className="text-lg font-bold leading-tight text-gray-900 truncate">{title}</h1>
+        {email && <p className="text-xs leading-tight text-gray-500 truncate">Logged in as {email}</p>}
       </div>
 
       <div className="flex items-center gap-3 shrink-0 ml-auto">

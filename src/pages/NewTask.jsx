@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AlertCircle, ArrowLeft, Eye, EyeOff, FileText, KeyRound, MapPin } from 'lucide-react'
+import { AlertCircle, ArrowLeft, Eye, EyeOff, Filter, KeyRound, MapPin } from 'lucide-react'
 import { startTask, fetchTasks } from '../lib/api'
 import MultiSelect from '../components/ui/MultiSelect'
 import TagInput from '../components/ui/TagInput'
@@ -11,6 +11,7 @@ const EMPLOYEE_COUNT_OPTIONS = [
 
 export default function NewTask() {
   const navigate = useNavigate()
+  const [taskName, setTaskName] = useState('')
   const [jobTitles, setJobTitles] = useState([])
   const [industries, setIndustries] = useState([])
   const [countries, setCountries] = useState([])
@@ -35,7 +36,7 @@ export default function NewTask() {
     if (!hasAnyFilter || submitting) return
     setSubmitting(true)
     try {
-      await startTask({ jobTitles, industries, countries, cities, employeeCounts })
+      await startTask({ taskName, jobTitles, industries, countries, cities, employeeCounts })
       navigate('/tasks')
     } catch {
       // Error toast is shown by the API layer.
@@ -91,22 +92,35 @@ export default function NewTask() {
         </div>
 
         <div className="rounded-2xl border border-gray-200 bg-white p-5 space-y-5">
-          <div className="flex items-center gap-2.5">
-            <FileText size={16} className="text-blue-600" />
-            <span className="text-sm font-bold text-gray-900">Search Filters</span>
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+              Task name
+            </label>
+            <input
+              type="text"
+              value={taskName}
+              onChange={(e) => setTaskName(e.target.value)}
+              placeholder="e.g. Tech Executives US & UK"
+              className="mt-1.5 w-full rounded-lg border border-gray-200 px-3.5 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-300"
+            />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-4">
+            <div className="sm:col-span-2 flex items-center gap-1.5">
+              <Filter size={13} className="text-gray-400" />
+              <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                Search Filters
+              </span>
+            </div>
+
             <TagInput
               label="Job title"
-              required
               value={jobTitles}
               onChange={setJobTitles}
               placeholder="e.g. CEO, Founder, Director"
             />
             <TagInput
               label="Industry"
-              required
               value={industries}
               onChange={setIndustries}
               placeholder="e.g. Real Estate, E-Commerce"
@@ -115,7 +129,6 @@ export default function NewTask() {
             <div className="sm:col-span-2">
               <MultiSelect
                 label="Employee count"
-                required
                 options={EMPLOYEE_COUNT_OPTIONS}
                 value={employeeCounts}
                 onChange={setEmployeeCounts}
@@ -148,7 +161,7 @@ export default function NewTask() {
         <div className="flex items-center gap-2.5 rounded-lg bg-blue-50 px-4 py-3.5 text-sm text-blue-800">
           <AlertCircle size={16} className="shrink-0" />
           Starting a new task will scrape Adapt.io leads, generate email permutations, and verify them
-          with MailTester. Only one task can run at a time.
+          with MailTester.
         </div>
 
         <div className="flex items-center justify-end gap-3">

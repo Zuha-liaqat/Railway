@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Loader2, Plus } from 'lucide-react'
-import { fetchTasks, fetchCompletedTasks } from '../lib/api'
+import { fetchTasks, fetchCompletedTasks, deleteTask } from '../lib/api'
+import { toast } from '../lib/toast'
 import TaskCard from '../components/ui/TaskCard'
 import CompletedTasksTable from '../components/ui/CompletedTasksTable'
 import Pagination from '../components/ui/Pagination'
+import ConfirmModal from '../components/ui/ConfirmModal'
 
 const COMPLETED_PAGE_SIZE = 6
 
@@ -14,6 +16,8 @@ export default function Tasks() {
   const [completedTasks, setCompletedTasks] = useState([])
   const [completedPage, setCompletedPage] = useState(1)
   const [loading, setLoading] = useState(true)
+  const [deletingId, setDeletingId] = useState(null)
+  const [pendingDeleteId, setPendingDeleteId] = useState(null)
 
   const loadRunning = useCallback(async (silent = false) => {
     if (!silent) setLoading(true)
@@ -55,6 +59,23 @@ export default function Tasks() {
     prevActiveRef.current = isActive
   }, [isActive, loadCompleted])
 
+  async function confirmDelete() {
+    const taskId = pendingDeleteId
+    if (!taskId) return
+    setDeletingId(taskId)
+    try {
+      await deleteTask(taskId)
+      toast.success('Task deleted.')
+      setRunningTasks((prev) => prev.filter((t) => t.id !== taskId))
+      setCompletedTasks((prev) => prev.filter((t) => t.task_id !== taskId))
+      setPendingDeleteId(null)
+    } catch {
+      // Error toast is shown by the API layer.
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
   const completedTotalPages = Math.max(1, Math.ceil(completedTasks.length / COMPLETED_PAGE_SIZE))
   const currentCompletedPage = Math.min(completedPage, completedTotalPages)
   const pagedCompletedTasks = completedTasks.slice(
@@ -64,13 +85,7 @@ export default function Tasks() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Scraping Tasks</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            Create and monitor Adapt.io scraping tasks with email verification.
-          </p>
-        </div>
+      <div className="flex justify-end">
         <button
           onClick={() => navigate('/tasks/new')}
           className="inline-flex items-center justify-center gap-2 rounded-full bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-800 whitespace-nowrap"
@@ -105,7 +120,11 @@ export default function Tasks() {
           {completedTasks.length > 0 && (
             <div className="space-y-3">
               <h2 className="text-sm font-bold text-gray-900">Completed Tasks</h2>
-              <CompletedTasksTable tasks={pagedCompletedTasks} />
+              <CompletedTasksTable
+                tasks={pagedCompletedTasks}
+                onDelete={setPendingDeleteId}
+                deletingId={deletingId}
+              />
               {completedTotalPages > 1 && (
                 <div className="flex justify-center pt-1">
                   <Pagination
@@ -125,6 +144,15 @@ export default function Tasks() {
           )}
         </>
       )}
+
+      <ConfirmModal
+        open={pendingDeleteId !== null}
+        title="Delete this task?"
+        message="This will permanently delete the task and its data. This action cannot be undone."
+        loading={deletingId === pendingDeleteId}
+        onConfirm={confirmDelete}
+        onCancel={() => setPendingDeleteId(null)}
+      />
     </div>
   )
 }

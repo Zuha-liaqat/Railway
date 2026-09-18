@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { Briefcase, LayoutGrid, LogOut } from 'lucide-react'
+import { clearToken } from '../../lib/api'
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutGrid },
@@ -10,7 +11,7 @@ export default function Sidebar() {
   const navigate = useNavigate()
 
   function handleLogout() {
-    localStorage.removeItem('clutch_auth')
+    clearToken()
     localStorage.removeItem('clutch_user_email')
     navigate('/login')
   }

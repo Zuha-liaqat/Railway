@@ -1,13 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useNavigate, useOutletContext } from 'react-router-dom'
 import {
   AlertCircle,
   CheckCircle2,
-  ChevronDown,
-  ChevronUp,
   Download,
   Loader2,
-  Plus,
   ShieldCheck,
   TrendingUp,
   Users,
@@ -26,15 +22,11 @@ const POLL_INTERVAL = 5000
 const PAGE_SIZE = 100
 
 export default function Dashboard() {
-  const navigate = useNavigate()
-  const { search } = useOutletContext() || {}
   const [task, setTask] = useState(null)
   const [completedTasks, setCompletedTasks] = useState([])
   const [loading, setLoading] = useState(true)
-  const [showDetails, setShowDetails] = useState(false)
   const [page, setPage] = useState(1)
   const pollRef = useRef(null)
-  const userEmail = localStorage.getItem('clutch_user_email') || ''
 
   const loadCurrent = useCallback(async ({ silent } = {}) => {
     if (!silent) setLoading(true)
@@ -73,7 +65,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     setPage(1)
-  }, [search, task?.id])
+  }, [task?.id])
 
   function handleDownload() {
     const matched = completedTasks.find((t) => t.task_id === task?.id)
@@ -86,31 +78,12 @@ export default function Dashboard() {
   const isCompleted = COMPLETED_STATUSES.includes(status)
 
   const allLeads = task?.verified_leads || []
-  const term = (search || '').trim().toLowerCase()
-  const filteredLeads = term
-    ? allLeads.filter((l) =>
-        [l.job_title, l.company_name, l.location].some((f) => (f || '').toLowerCase().includes(term))
-      )
-    : allLeads
-  const totalPages = Math.max(1, Math.ceil(filteredLeads.length / PAGE_SIZE))
+  const totalPages = Math.max(1, Math.ceil(allLeads.length / PAGE_SIZE))
   const currentPage = Math.min(page, totalPages)
-  const pageLeads = filteredLeads.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+  const pageLeads = allLeads.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-          {userEmail && <p className="text-sm text-gray-500 mt-0.5">Logged in as {userEmail}</p>}
-        </div>
-        <button
-          onClick={() => navigate('/tasks/new')}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-700 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-800 whitespace-nowrap"
-        >
-          <Plus size={16} /> New Scraping Task
-        </button>
-      </div>
-
       {loading ? (
         <div className="flex items-center justify-center gap-2 py-24 text-sm text-gray-500">
           <Loader2 size={16} className="animate-spin" /> Loading dashboard...
@@ -163,15 +136,13 @@ export default function Dashboard() {
 
           <div className="rounded-2xl border border-gray-200 bg-white p-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-base font-bold text-gray-900">Current Task</h2>
+              <div>
+                <h2 className="text-base font-bold text-gray-900">
+                  {task.task_name || 'Current Task'}
+                </h2>
+                <p className="text-xs text-gray-400 mt-0.5">Task #{task.id}</p>
+              </div>
               <div className="flex items-center gap-2.5">
-                <button
-                  onClick={() => setShowDetails((v) => !v)}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-                >
-                  {showDetails ? 'Hide Details' : 'View Details'}
-                  {showDetails ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                </button>
                 <button
                   onClick={handleDownload}
                   disabled={!isCompleted}
@@ -208,8 +179,8 @@ export default function Dashboard() {
 
             {isFailed && (
               <div className="mt-4 flex items-center gap-2 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
-                <AlertCircle size={15} /> This task failed. Try starting a new scraping task, or check View
-                Details below for more information.
+                <AlertCircle size={15} /> This task failed. Try starting a new scraping task, or check the
+                details below for more information.
               </div>
             )}
 
@@ -217,19 +188,10 @@ export default function Dashboard() {
               <FilterChips filters={task.filters} />
             </div>
 
-            {showDetails && (
-              <div className="mt-4 pt-4 border-t border-gray-100 space-y-3">
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  <Field label="Task ID" value={`#${task.id}`} />
-                  <Field label="Created" value={formatDate(task.created_at)} />
-                  <Field label="Completed" value={formatDate(task.completed_at)} />
-                </div>
-                {task.error && (
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Error details</p>
-                    <p className="mt-1 text-sm text-red-600 font-mono wrap-break-word">{task.error}</p>
-                  </div>
-                )}
+            {task.error && (
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <p className="text-xs font-semibold uppercase tracking-wide text-gray-400">Error details</p>
+                <p className="mt-1 text-sm text-red-600 font-mono wrap-break-word">{task.error}</p>
               </div>
             )}
           </div>
@@ -239,25 +201,27 @@ export default function Dashboard() {
               <h2 className="text-base font-bold text-gray-900">Verified Leads</h2>
 
               <div className="mt-4">
-                {filteredLeads.length === 0 ? (
+                {allLeads.length === 0 ? (
                   <p className="py-10 text-center text-sm text-gray-500">
-                    {term ? 'No verified leads match your search.' : 'No verified leads found for this task.'}
+                    No verified leads found for this task.
                   </p>
                 ) : (
                   <LeadsTable leads={pageLeads} compact />
                 )}
               </div>
 
-              {filteredLeads.length > 0 && (
+              {allLeads.length > 0 && (
                 <div className="mt-5 pt-4 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <p className="text-sm text-gray-500">
                     Showing{' '}
                     <span className="font-semibold text-blue-700">
-                      {(currentPage - 1) * PAGE_SIZE + 1}-{Math.min(currentPage * PAGE_SIZE, filteredLeads.length)}
+                      {(currentPage - 1) * PAGE_SIZE + 1}-{Math.min(currentPage * PAGE_SIZE, allLeads.length)}
                     </span>{' '}
-                    of <span className="font-semibold text-blue-700">{filteredLeads.length}</span> leads
+                    of <span className="font-semibold text-blue-700">{allLeads.length}</span> leads
                   </p>
-                  <Pagination page={currentPage} totalPages={totalPages} onChange={setPage} />
+                  {totalPages > 1 && (
+                    <Pagination page={currentPage} totalPages={totalPages} onChange={setPage} />
+                  )}
                 </div>
               )}
             </div>

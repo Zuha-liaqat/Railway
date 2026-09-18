@@ -6,9 +6,10 @@ import Tasks from './pages/Tasks'
 import NewTask from './pages/NewTask'
 import Settings from './pages/Settings'
 import Toaster from './components/ui/Toaster'
+import { getToken } from './lib/api'
 
 function RequireAuth({ children }) {
-  const isAuthed = localStorage.getItem('clutch_auth') === '1'
+  const isAuthed = Boolean(getToken())
   return isAuthed ? children : <Navigate to="/login" replace />
 }
 

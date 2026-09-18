@@ -1,9 +1,10 @@
+import { Loader2, Trash2 } from 'lucide-react'
 import StatusBadge from './StatusBadge'
 import FilterChips from './FilterChips'
 
 const RUNNING_STATUSES = ['pending', 'running', 'starting', 'in_progress', 'queued']
 
-export default function TaskCard({ task }) {
+export default function TaskCard({ task, onDelete, deleting }) {
   const status = String(task.status || '').toLowerCase()
   const isRunning = RUNNING_STATUSES.includes(status)
 
@@ -13,10 +14,22 @@ export default function TaskCard({ task }) {
         <div>
           <StatusBadge status={task.status} />
           <div className="mt-3 flex items-center gap-2 flex-wrap">
-            <h3 className="text-lg font-bold text-gray-900">Task #{task.id}</h3>
+            <h3 className="text-lg font-bold text-gray-900">{task.task_name || `Task #${task.id}`}</h3>
+            <span className="text-xs font-semibold text-gray-400">#{task.id}</span>
             <span className="text-sm text-gray-400">{task.account_email}</span>
           </div>
         </div>
+        {onDelete && (
+          <button
+            type="button"
+            onClick={() => onDelete(task.id)}
+            disabled={deleting}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-red-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
+            aria-label="Delete task"
+          >
+            {deleting ? <Loader2 size={15} className="animate-spin" /> : <Trash2 size={15} />}
+          </button>
+        )}
       </div>
 
       <div className="mt-4">
