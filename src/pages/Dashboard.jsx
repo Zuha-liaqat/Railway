@@ -6,12 +6,14 @@ import {
   FileSpreadsheet,
   Layers,
   Loader2,
+  RotateCcw,
   ShieldCheck,
   TrendingUp,
   Users,
   XCircle,
 } from 'lucide-react'
-import { fetchTasks, fetchCompletedTasks } from '../lib/api'
+import { fetchTasks, fetchCompletedTasks, retryTask } from '../lib/api'
+import { toast } from '../lib/toast'
 import { formatDate, statusLabel } from '../lib/format'
 import FilterChips from '../components/ui/FilterChips'
 import LeadsTable from '../components/ui/LeadsTable'
@@ -28,6 +30,7 @@ export default function Dashboard() {
   const [completedTasks, setCompletedTasks] = useState([])
   const [loading, setLoading] = useState(true)
   const [page, setPage] = useState(1)
+  const [retrying, setRetrying] = useState(false)
   const pollRef = useRef(null)
 
   const loadCurrent = useCallback(async ({ silent } = {}) => {
@@ -68,6 +71,20 @@ export default function Dashboard() {
   useEffect(() => {
     setPage(1)
   }, [task?.id])
+
+  async function handleRetry() {
+    if (!task) return
+    setRetrying(true)
+    try {
+      await retryTask(task.id)
+      toast.success('Task retry started.')
+      loadCurrent()
+    } catch {
+      // Error toast is shown by the API layer.
+    } finally {
+      setRetrying(false)
+    }
+  }
 
   const status = String(task?.status || '').toLowerCase()
   const isFailed = FAILED_STATUSES.includes(status)
@@ -201,9 +218,20 @@ export default function Dashboard() {
             )}
 
             {isFailed && (
-              <div className="mt-4 flex items-center gap-2 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
-                <AlertCircle size={15} /> This task failed. Try starting a new scraping task, or check the
-                details below for more information.
+              <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700">
+                <span className="flex items-center gap-2">
+                  <AlertCircle size={15} className="shrink-0" /> This task failed. Retry it, or start a new
+                  scraping task instead.
+                </span>
+                <button
+                  type="button"
+                  onClick={handleRetry}
+                  disabled={retrying}
+                  className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-red-600 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-red-700 disabled:opacity-50"
+                >
+                  {retrying ? <Loader2 size={13} className="animate-spin" /> : <RotateCcw size={13} />}
+                  Retry
+                </button>
               </div>
             )}
 

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Loader2, Plus } from 'lucide-react'
-import { fetchTasks, fetchCompletedTasks, deleteTask } from '../lib/api'
+import { fetchTasks, fetchCompletedTasks, deleteTask, retryTask } from '../lib/api'
 import { toast } from '../lib/toast'
 import TaskCard from '../components/ui/TaskCard'
 import CompletedTasksTable from '../components/ui/CompletedTasksTable'
@@ -18,6 +18,7 @@ export default function Tasks() {
   const [loading, setLoading] = useState(true)
   const [deletingId, setDeletingId] = useState(null)
   const [pendingDeleteId, setPendingDeleteId] = useState(null)
+  const [retryingId, setRetryingId] = useState(null)
 
   const loadRunning = useCallback(async (silent = false) => {
     if (!silent) setLoading(true)
@@ -76,6 +77,19 @@ export default function Tasks() {
     }
   }
 
+  async function handleRetry(taskId) {
+    setRetryingId(taskId)
+    try {
+      await retryTask(taskId)
+      toast.success('Task retry started.')
+      loadRunning(true)
+    } catch {
+      // Error toast is shown by the API layer.
+    } finally {
+      setRetryingId(null)
+    }
+  }
+
   const completedTotalPages = Math.max(1, Math.ceil(completedTasks.length / COMPLETED_PAGE_SIZE))
   const currentCompletedPage = Math.min(completedPage, completedTotalPages)
   const pagedCompletedTasks = completedTasks.slice(
@@ -111,7 +125,12 @@ export default function Tasks() {
                 }`}
               >
                 {runningTasks.map((task) => (
-                  <TaskCard key={task.id} task={task} />
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    onRetry={handleRetry}
+                    retrying={retryingId === task.id}
+                  />
                 ))}
               </div>
             </div>

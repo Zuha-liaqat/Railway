@@ -122,6 +122,16 @@ export function deleteTask(taskId) {
   })
 }
 
+export function retryTask(taskId, password) {
+  const payload = {}
+  if (password?.trim()) payload.password = password.trim()
+
+  return request(`/api/tasks/${taskId}/retry/`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  })
+}
+
 export function fetchCsvTasks() {
   return request('/api/tasks/csv-tasks/')
 }
