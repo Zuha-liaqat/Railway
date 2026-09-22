@@ -67,7 +67,15 @@ async function request(path, options = {}) {
   return res.json()
 }
 
-export function startTask({ taskName, jobTitles, industries, countries, cities, employeeCounts }) {
+export function startTask({
+  taskName,
+  jobTitles,
+  industries,
+  countries,
+  cities,
+  employeeCounts,
+  verification = true,
+}) {
   const filters = {}
   if (jobTitles?.length) filters.job_titles = jobTitles
   if (industries?.length) filters.industries = industries
@@ -78,7 +86,7 @@ export function startTask({ taskName, jobTitles, industries, countries, cities, 
   }
   if (employeeCounts?.length) filters.employee_counts = employeeCounts
 
-  const payload = {}
+  const payload = { verification: Boolean(verification) }
   if (taskName?.trim()) payload.task_name = taskName.trim()
   payload.filters = filters
 

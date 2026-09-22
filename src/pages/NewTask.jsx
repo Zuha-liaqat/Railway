@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AlertCircle, ArrowLeft, Eye, EyeOff, Filter, KeyRound, MapPin } from 'lucide-react'
+import { AlertCircle, ArrowLeft, Eye, EyeOff, Filter, KeyRound, MapPin, ShieldCheck } from 'lucide-react'
 import { startTask, fetchTasks } from '../lib/api'
 import MultiSelect from '../components/ui/MultiSelect'
 import TagInput from '../components/ui/TagInput'
@@ -12,6 +12,7 @@ const EMPLOYEE_COUNT_OPTIONS = [
 export default function NewTask() {
   const navigate = useNavigate()
   const [taskName, setTaskName] = useState('')
+  const [verification, setVerification] = useState(true)
   const [jobTitles, setJobTitles] = useState([])
   const [industries, setIndustries] = useState([])
   const [countries, setCountries] = useState([])
@@ -36,7 +37,7 @@ export default function NewTask() {
     if (!hasAnyFilter || submitting) return
     setSubmitting(true)
     try {
-      await startTask({ taskName, jobTitles, industries, countries, cities, employeeCounts })
+      await startTask({ taskName, verification, jobTitles, industries, countries, cities, employeeCounts })
       navigate('/tasks')
     } catch {
       // Error toast is shown by the API layer.
@@ -105,6 +106,23 @@ export default function NewTask() {
             />
           </div>
 
+          <label className="flex cursor-pointer items-center justify-between gap-3 rounded-lg border border-gray-200 px-3.5 py-3">
+            <span className="flex items-center gap-2 text-sm font-semibold text-gray-900">
+              <ShieldCheck size={16} className="text-blue-600" />
+              Verification
+            </span>
+            <span className="relative inline-flex h-4.5 w-8 shrink-0 items-center">
+              <input
+                type="checkbox"
+                checked={verification}
+                onChange={(e) => setVerification(e.target.checked)}
+                className="peer sr-only"
+              />
+              <span className="absolute inset-0 rounded-full bg-gray-200 transition-colors peer-checked:bg-blue-600" />
+              <span className="absolute left-0.5 h-3.5 w-3.5 rounded-full bg-white shadow transition-transform peer-checked:translate-x-3.5" />
+            </span>
+          </label>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-4">
             <div className="sm:col-span-2 flex items-center gap-1.5">
               <Filter size={13} className="text-gray-400" />
@@ -160,8 +178,9 @@ export default function NewTask() {
 
         <div className="flex items-center gap-2.5 rounded-lg bg-blue-50 px-4 py-3.5 text-sm text-blue-800">
           <AlertCircle size={16} className="shrink-0" />
-          Starting a new task will scrape Adapt.io leads, generate email permutations, and verify them
-          with MailTester.
+          {verification
+            ? 'Starting a new task will scrape Adapt.io leads, generate email permutations, and verify them with MailTester.'
+            : 'Starting a new task will scrape Adapt.io leads and generate email permutations, without verification — you’ll get separate leads and combinations CSV files.'}
         </div>
 
         <div className="flex items-center justify-end gap-3">

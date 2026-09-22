@@ -3,6 +3,8 @@ import {
   AlertCircle,
   CheckCircle2,
   Download,
+  FileSpreadsheet,
+  Layers,
   Loader2,
   ShieldCheck,
   TrendingUp,
@@ -67,15 +69,13 @@ export default function Dashboard() {
     setPage(1)
   }, [task?.id])
 
-  function handleDownload() {
-    const matched = completedTasks.find((t) => t.task_id === task?.id)
-    const url = task?.download_url || task?.result_url || matched?.url_of_file
-    if (url) window.open(url, '_blank')
-  }
-
   const status = String(task?.status || '').toLowerCase()
   const isFailed = FAILED_STATUSES.includes(status)
   const isCompleted = COMPLETED_STATUSES.includes(status)
+  const matchedCompleted = completedTasks.find((t) => t.task_id === task?.id)
+  const leadsUrl = task?.url_of_file || matchedCompleted?.url_of_file
+  const combinationsUrl = task?.url_of_combinations_file || matchedCompleted?.url_of_combinations_file
+  const showVerifiedStat = !isCompleted || Boolean(task?.total_verified_emails)
 
   const allLeads = task?.verified_leads || []
   const totalPages = Math.max(1, Math.ceil(allLeads.length / PAGE_SIZE))
@@ -96,7 +96,11 @@ export default function Dashboard() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div
+            className={`grid grid-cols-1 sm:grid-cols-2 gap-4 ${
+              showVerifiedStat ? 'lg:grid-cols-4' : 'lg:grid-cols-3'
+            }`}
+          >
             <StatCard
               icon={Users}
               color="text-blue-600"
@@ -113,16 +117,18 @@ export default function Dashboard() {
               value={task.total_candidates_generated ?? 0}
               subtext="Email permutations"
             />
-            <StatCard
-              icon={ShieldCheck}
-              color="text-emerald-600"
-              bg="bg-emerald-50"
-              label="Verified emails"
-              value={task.total_verified_emails ?? 0}
-              subtext={successRate(task)}
-              subtextIcon={CheckCircle2}
-              subtextColor="text-emerald-600"
-            />
+            {showVerifiedStat && (
+              <StatCard
+                icon={ShieldCheck}
+                color="text-emerald-600"
+                bg="bg-emerald-50"
+                label="Verified emails"
+                value={task.total_verified_emails ?? 0}
+                subtext={successRate(task)}
+                subtextIcon={CheckCircle2}
+                subtextColor="text-emerald-600"
+              />
+            )}
             <StatCard
               icon={isFailed ? XCircle : isCompleted ? CheckCircle2 : Loader2}
               color={isFailed ? 'text-red-600' : isCompleted ? 'text-emerald-600' : 'text-blue-600'}
@@ -142,15 +148,32 @@ export default function Dashboard() {
                 </h2>
                 <p className="text-xs text-gray-400 mt-0.5">Task #{task.id}</p>
               </div>
-              <div className="flex items-center gap-2.5">
-                <button
-                  onClick={handleDownload}
-                  disabled={!isCompleted}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-blue-700 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:opacity-40 disabled:hover:bg-blue-700"
-                >
-                  <Download size={14} /> Download CSV
-                </button>
-              </div>
+              {isCompleted && (leadsUrl || combinationsUrl) && (
+                <div className="flex items-center gap-2.5">
+                  {leadsUrl && (
+                    <a
+                      href={leadsUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="group inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+                    >
+                      <FileSpreadsheet size={15} /> Leads CSV
+                      <Download size={13} className="text-gray-400 group-hover:text-blue-500" />
+                    </a>
+                  )}
+                  {combinationsUrl && (
+                    <a
+                      href={combinationsUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="group inline-flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
+                    >
+                      <Layers size={15} /> Combinations CSV
+                      <Download size={13} className="text-gray-400 group-hover:text-blue-500" />
+                    </a>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="mt-5 grid grid-cols-2 sm:grid-cols-4 gap-4">
