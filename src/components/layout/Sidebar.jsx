@@ -1,10 +1,11 @@
 import { NavLink, useNavigate } from 'react-router-dom'
-import { Briefcase, LayoutGrid, LogOut } from 'lucide-react'
+import { Briefcase, LayoutGrid, LogOut, Sprout } from 'lucide-react'
 import { clearToken } from '../../lib/api'
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutGrid },
   { to: '/tasks', label: 'Tasks', icon: Briefcase },
+  { to: '/organic', label: 'Organic Me', icon: Sprout },
 ]
 
 export default function Sidebar() {

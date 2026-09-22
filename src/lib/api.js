@@ -36,16 +36,19 @@ function extractErrorMessage(body) {
   return parts.join(' | ')
 }
 
-async function request(path, options) {
+async function request(path, options = {}) {
   const token = getToken()
+  const { headers: extraHeaders, ...rest } = options
+  const isFormData = rest.body instanceof FormData
   let res
   try {
     res = await fetch(`${BASE_URL}${path}`, {
+      ...rest,
       headers: {
-        'Content-Type': 'application/json',
+        ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
         ...(token ? { Authorization: `Token ${token}` } : {}),
+        ...extraHeaders,
       },
-      ...options,
     })
   } catch {
     const message = 'Network error — please check your connection and try again.'
@@ -108,5 +111,20 @@ export function fetchMe() {
 export function deleteTask(taskId) {
   return request(`/api/tasks/${taskId}/`, {
     method: 'DELETE',
+  })
+}
+
+export function fetchCsvTasks() {
+  return request('/api/tasks/csv-tasks/')
+}
+
+export function processCsv({ file, taskName }) {
+  const formData = new FormData()
+  formData.append('file', file)
+  if (taskName?.trim()) formData.append('task_name', taskName.trim())
+
+  return request('/api/tasks/process-csv/', {
+    method: 'POST',
+    body: formData,
   })
 }

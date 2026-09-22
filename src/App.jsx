@@ -4,6 +4,7 @@ import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Tasks from './pages/Tasks'
 import NewTask from './pages/NewTask'
+import Organic from './pages/Organic'
 import Settings from './pages/Settings'
 import Toaster from './components/ui/Toaster'
 import { getToken } from './lib/api'
@@ -24,6 +25,7 @@ export default function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/tasks" element={<Tasks />} />
           <Route path="/tasks/new" element={<NewTask />} />
+          <Route path="/organic" element={<Organic />} />
           <Route path="/settings" element={<Settings />} />
         </Route>
       </Routes>

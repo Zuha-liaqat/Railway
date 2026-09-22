@@ -5,6 +5,7 @@ const PAGE_TITLES = {
   '/dashboard': 'Dashboard',
   '/tasks': 'Tasks',
   '/tasks/new': 'New Task',
+  '/organic': 'Organic Me',
   '/settings': 'Settings',
 }
 
